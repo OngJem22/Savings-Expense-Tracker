@@ -288,7 +288,7 @@
     <b>${goal.name}</b> - ₱${goal.price}
     ${!complete ? `
       <div class="progress">
-        <div class="progress-bar" style="width:${percent}%"></div>
+        <div class="progress-bar" style="width:${Math.max(5, percent)}%"></div>
       </div>` : ''}
     ${complete ? `<button onclick="completeGoal(${index})">DONE</button>` : ''}
   </div>
