@@ -2,10 +2,8 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Expense & Savings Tracker</title>
-  <link rel="manifest" href="manifest.json" />
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     :root {
       --bg-color: #f4f1ee;
@@ -30,11 +28,9 @@
       margin: 10px;
       background: var(--bg-color);
       color: var(--text-color);
-      transition: background 0.3s ease, color 0.3s ease;
     }
     h1, h2 {
       text-align: center;
-      font-weight: bold;
       color: var(--text-color);
     }
     .section {
@@ -42,13 +38,6 @@
       padding: 20px;
       margin-bottom: 20px;
       border-radius: 12px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-      transition: background 0.3s ease;
-    }
-    label {
-      display: block;
-      margin-top: 10px;
-      font-weight: 500;
     }
     input, select, button {
       padding: 10px;
@@ -56,113 +45,44 @@
       margin-top: 5px;
       font-size: 16px;
       box-sizing: border-box;
-      border: 1px solid #ccc;
-      border-radius: 6px;
     }
     button {
       background-color: var(--button-bg);
       color: var(--button-text);
       border: none;
+      border-radius: 8px;
+      margin-top: 10px;
       cursor: pointer;
-      transition: background-color 0.3s ease;
-    }
-    button:hover {
-      background-color: #6f4324;
     }
     table, th, td {
       width: 100%;
       margin-top: 10px;
       border-collapse: collapse;
-      background: var(--section-bg);
-      color: var(--text-color);
     }
     th, td {
       padding: 10px;
       border: 1px solid #ccc;
-      font-size: 14px;
       text-align: left;
     }
-    .goal-green {
-      background: var(--goal-green);
-      color: #1e392a;
-    }
-    .goal-red {
-      background: var(--goal-red);
-      color: #5a1a1a;
-    }
-    body.dark .goal-green,
-    body.dark .goal-red {
-      color: #ffffff;
-    }
-    .progress {
-      height: 16px;
-      background-color: #e0e0e0;
-      border-radius: 8px;
-      overflow: hidden;
-      margin-top: 4px;
-    }
-    .progress-bar {
-      height: 100%;
-      background-color: #8b5e3c;
-      transition: width 0.4s ease;
-    }
+    .goal-green { background: var(--goal-green); padding: 10px; border-radius: 10px; margin-top: 10px; }
+    .goal-red { background: var(--goal-red); padding: 10px; border-radius: 10px; margin-top: 10px; }
+    .progress { height: 16px; background-color: #ccc; border-radius: 8px; overflow: hidden; margin-top: 4px; }
+    .progress-bar { height: 100%; background-color: #8b5e3c; transition: width 0.3s ease; }
+    .tabs { display: flex; flex-wrap: wrap; justify-content: space-around; margin-bottom: 20px; }
+    .tabs button { flex: 1; margin: 4px; }
     .nav-toggle {
-      position: fixed;
-      top: 10px;
-      right: 10px;
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-      background: var(--button-bg);
-      color: var(--button-text);
-      border: none;
-      font-size: 18px;
-      text-align: center;
-      line-height: 40px;
-      z-index: 9999;
+      position: fixed; top: 10px; right: 10px; width: 40px; height: 40px;
+      border-radius: 50%; background: var(--button-bg); color: var(--button-text);
+      border: none; font-size: 18px; text-align: center; z-index: 9999;
     }
-    .tabs {
-      display: flex;
-      justify-content: space-around;
-      margin-bottom: 20px;
-      flex-wrap: wrap;
-    }
-    .tabs button {
-      flex: 1;
-      padding: 10px;
-      background: var(--button-bg);
-      color: var(--button-text);
-      border: none;
-      font-weight: bold;
-      margin: 4px;
-    }
-    .hidden {
-      display: none;
-    }
-    .bold {
-      font-weight: bold;
-      font-size: 20px;
-    }
-    canvas {
-      background: #fff;
-      border-radius: 8px;
-      padding: 10px;
-    }
-    @media (max-width: 600px) {
-      input, select, button {
-        font-size: 14px;
-        padding: 8px;
-      }
-      th, td {
-        font-size: 12px;
-        padding: 8px;
-      }
-    }
+    .bold { font-weight: bold; font-size: 20px; }
+    .hidden { display: none; }
   </style>
 </head>
 <body onload="showTab('allowance')">
   <button class="nav-toggle" onclick="document.body.classList.toggle('dark')">🌓</button>
   <h1>Expense & Savings Tracker</h1>
+
   <div class="tabs">
     <button onclick="showTab('allowance')">Allowance</button>
     <button onclick="showTab('expenses')">Expenses</button>
@@ -171,204 +91,255 @@
     <button onclick="showTab('completed')">Completed</button>
     <button onclick="showTab('log')">Expense Log</button>
   </div>
+
+  <div id="allowance" class="section">
+    <h2>Set Allowance</h2>
+    <input type="number" id="allowanceAmount" placeholder="Amount (₱)" />
+    <select id="allowanceType">
+      <option value="daily">Daily</option>
+      <option value="weekly">Weekly</option>
+      <option value="monthly">Monthly</option>
+    </select>
+    <button onclick="setAllowance()">Set Allowance</button>
+    <button onclick="resetAllowance()">Reset Allowance</button>
+    <p id="allowanceDisplay"></p>
+  </div>
+
+  <div id="expenses" class="section hidden">
+    <h2>Add Expense</h2>
+    <input type="number" id="expenseAmount" placeholder="Amount (₱)" />
+    <select id="expenseCategory">
+      <option value="FOOD">FOOD</option>
+      <option value="DRINKS">DRINKS</option>
+      <option value="TRANSPO">TRANSPO</option>
+      <option value="OTHERS">OTHERS</option>
+    </select>
+    <button onclick="addExpense()">Add Expense</button>
+    <button onclick="resetExpenses()">Reset Expenses</button>
+    <div id="expenseList"></div>
+  </div>
+
+  <div id="savings" class="section hidden">
+    <h2>Savings</h2>
+    <p class="bold">Total Savings: ₱<span id="totalSavings">0</span></p>
+    <button onclick="manualAddSavings()">Add to Savings</button>
+    <button onclick="transferRemaining()">Transfer Remaining Allowance</button>
+    <button onclick="resetSavings()">Reset Savings</button>
+  </div>
+
+  <div id="goals" class="section hidden">
+    <h2>Goals</h2>
+    <input type="text" id="goalName" placeholder="Goal Name" />
+    <input type="number" id="goalAmount" placeholder="Goal Price (₱)" />
+    <button onclick="addGoal()">Add Goal</button>
+    <div id="goalList"></div>
+  </div>
+
+  <div id="completed" class="section hidden">
+    <h2>Completed Goals</h2>
+    <div id="completedGoals"></div>
+    <button onclick="resetCompletedGoals()">Reset Completed</button>
+  </div>
+
+  <div id="log" class="section hidden">
+    <h2>Expense Log</h2>
+    <div id="expenseLog"></div>
+  </div>
+
   <script>
-    // JavaScript logic goes here
-let allowance = JSON.parse(localStorage.getItem("allowance")) || { amount: 0, type: "daily", date: new Date().toISOString() };
-let expenses = JSON.parse(localStorage.getItem("expenses")) || [];
-let savings = parseFloat(localStorage.getItem("savings")) || 0;
-let goals = JSON.parse(localStorage.getItem("goals")) || [];
-let completedGoals = JSON.parse(localStorage.getItem("completedGoals")) || [];
+    let allowance = JSON.parse(localStorage.getItem("allowance")) || { amount: 0, type: "daily", date: new Date().toISOString() };
+    let expenses = JSON.parse(localStorage.getItem("expenses")) || [];
+    let savings = parseFloat(localStorage.getItem("savings")) || 0;
+    let goals = JSON.parse(localStorage.getItem("goals")) || [];
+    let completedGoals = JSON.parse(localStorage.getItem("completedGoals")) || [];
 
-function saveAll() {
-  localStorage.setItem("allowance", JSON.stringify(allowance));
-  localStorage.setItem("expenses", JSON.stringify(expenses));
-  localStorage.setItem("savings", savings.toString());
-  localStorage.setItem("goals", JSON.stringify(goals));
-  localStorage.setItem("completedGoals", JSON.stringify(completedGoals));
-}
+    function saveAll() {
+      localStorage.setItem("allowance", JSON.stringify(allowance));
+      localStorage.setItem("expenses", JSON.stringify(expenses));
+      localStorage.setItem("savings", savings.toString());
+      localStorage.setItem("goals", JSON.stringify(goals));
+      localStorage.setItem("completedGoals", JSON.stringify(completedGoals));
+    }
 
-function showTab(id) {
-  document.querySelectorAll('.section').forEach(section => section.classList.add('hidden'));
-  const tab = document.getElementById(id);
-  if (tab) tab.classList.remove('hidden');
-  if (id === 'expenses') renderExpenses();
-  if (id === 'savings') updateSavings();
-  if (id === 'goals') renderGoals();
-  if (id === 'completed') renderCompletedGoals();
-  if (id === 'log') renderExpenseLog();
-}
+    function showTab(id) {
+      document.querySelectorAll('.section').forEach(s => s.classList.add('hidden'));
+      document.getElementById(id).classList.remove('hidden');
+      if (id === 'expenses') renderExpenses();
+      if (id === 'savings') updateSavings();
+      if (id === 'goals') renderGoals();
+      if (id === 'completed') renderCompletedGoals();
+      if (id === 'log') renderExpenseLog();
+    }
 
-function setAllowance() {
-  const amount = parseFloat(document.getElementById('allowanceAmount').value);
-  const type = document.getElementById('allowanceType').value;
-  if (amount > 0) {
-    allowance = { amount, type, date: new Date().toISOString() };
-    expenses = [];
-    saveAll();
-    updateAllowanceDisplay();
-    alert('Successfully set allowance');
-  }
-}
+    function setAllowance() {
+      const amount = parseFloat(document.getElementById('allowanceAmount').value);
+      const type = document.getElementById('allowanceType').value;
+      if (amount > 0) {
+        allowance = { amount, type, date: new Date().toISOString() };
+        expenses = [];
+        saveAll();
+        updateAllowanceDisplay();
+        alert('Successfully set allowance');
+      }
+    }
 
-function resetAllowance() {
-  allowance.amount = 0;
-  saveAll();
-  updateAllowanceDisplay();
-  alert('Successfully reset allowance');
-}
+    function resetAllowance() {
+      allowance.amount = 0;
+      saveAll();
+      updateAllowanceDisplay();
+      alert('Successfully reset allowance');
+    }
 
-function updateAllowanceDisplay() {
-  document.getElementById('allowanceDisplay').innerText = 'Allowance: ₱' + allowance.amount;
-}
+    function updateAllowanceDisplay() {
+      document.getElementById('allowanceDisplay').innerText = 'Allowance: ₱' + allowance.amount;
+    }
 
-function addExpense() {
-  const amount = parseFloat(document.getElementById('expenseAmount').value);
-  const category = document.getElementById('expenseCategory').value;
-  if (amount > 0 && allowance.amount >= amount) {
-    allowance.amount -= amount;
-    expenses.push({ amount, category, date: new Date().toISOString() });
-    saveAll();
-    renderExpenses();
-    alert('Successfully added expense');
-  } else {
-    alert('Not enough allowance to add this expense.');
-  }
-}
+    function addExpense() {
+      const amount = parseFloat(document.getElementById('expenseAmount').value);
+      const category = document.getElementById('expenseCategory').value;
+      if (amount > 0 && allowance.amount >= amount) {
+        allowance.amount -= amount;
+        expenses.push({ amount, category, date: new Date().toISOString() });
+        saveAll();
+        renderExpenses();
+        alert('Successfully added expense');
+      } else {
+        alert('Not enough allowance to add this expense.');
+      }
+    }
 
-function resetExpenses() {
-  expenses = [];
-  saveAll();
-  renderExpenses();
-  alert('Successfully reset expenses');
-}
+    function resetExpenses() {
+      expenses = [];
+      saveAll();
+      renderExpenses();
+      alert('Successfully reset expenses');
+    }
 
-function renderExpenses() {
-  const list = document.getElementById('expenseList');
-  list.innerHTML = "";
-  expenses.forEach((exp, index) => {
-    const item = document.createElement('p');
-    item.innerText = `${exp.category}: ₱${exp.amount} - ${new Date(exp.date).toLocaleDateString()}`;
-    list.appendChild(item);
-  });
-}
+    function renderExpenses() {
+      const list = document.getElementById('expenseList');
+      list.innerHTML = "";
+      expenses.forEach(exp => {
+        const item = document.createElement('p');
+        item.innerText = `${exp.category}: ₱${exp.amount} - ${new Date(exp.date).toLocaleDateString()}`;
+        list.appendChild(item);
+      });
+    }
+
     function manualAddSavings() {
-  const add = prompt("Enter amount to save:");
-  const value = parseFloat(add);
-  if (!isNaN(value) && value > 0) {
-    savings += value;
-    saveAll();
-    updateSavings();
-    alert('Successfully added to savings');
-  }
-}
+      const add = prompt("Enter amount to save:");
+      const value = parseFloat(add);
+      if (!isNaN(value) && value > 0) {
+        savings += value;
+        saveAll();
+        updateSavings();
+        alert('Successfully added to savings');
+      }
+    }
 
-function transferRemaining() {
-  if (allowance.amount > 0) {
-    savings += allowance.amount;
-    allowance.amount = 0;
-    saveAll();
-    updateSavings();
+    function transferRemaining() {
+      if (allowance.amount > 0) {
+        savings += allowance.amount;
+        allowance.amount = 0;
+        saveAll();
+        updateSavings();
+        updateAllowanceDisplay();
+        alert('Remaining allowance transferred to savings');
+      } else {
+        alert('No remaining allowance to transfer.');
+      }
+    }
+
+    function resetSavings() {
+      savings = 0;
+      saveAll();
+      updateSavings();
+      alert('Successfully reset savings');
+    }
+
+    function updateSavings() {
+      document.getElementById('totalSavings').innerText = savings.toFixed(2);
+    }
+
+    function addGoal() {
+      const name = document.getElementById('goalName').value;
+      const price = parseFloat(document.getElementById('goalAmount').value);
+      if (name && price > 0) {
+        goals.push({ name, price });
+        saveAll();
+        renderGoals();
+        alert('Goal added successfully');
+      }
+    }
+
+    function renderGoals() {
+      const list = document.getElementById('goalList');
+      list.innerHTML = "";
+      goals.forEach((goal, index) => {
+        const affordable = savings >= goal.price;
+        const div = document.createElement('div');
+        div.className = affordable ? 'goal-green' : 'goal-red';
+        div.innerHTML = `
+          <p><strong>${goal.name}</strong> - ₱${goal.price}</p>
+          <div class="progress"><div class="progress-bar" style="width:${Math.min(100, (savings / goal.price) * 100)}%"></div></div>
+          ${affordable ? '<button onclick="completeGoal(' + index + ')">DONE</button>' : ''}
+        `;
+        list.appendChild(div);
+      });
+    }
+
+    function completeGoal(index) {
+      const goal = goals[index];
+      if (savings >= goal.price) {
+        savings -= goal.price;
+        completedGoals.push(goal);
+        goals.splice(index, 1);
+        saveAll();
+        updateSavings();
+        renderGoals();
+        renderCompletedGoals();
+        alert('Goal marked as completed');
+      }
+    }
+
+    function renderCompletedGoals() {
+      const div = document.getElementById('completedGoals');
+      div.innerHTML = '';
+      completedGoals.forEach(goal => {
+        const p = document.createElement('p');
+        p.innerText = `${goal.name} - ₱${goal.price}`;
+        div.appendChild(p);
+      });
+    }
+
+    function resetCompletedGoals() {
+      completedGoals = [];
+      saveAll();
+      renderCompletedGoals();
+      alert('Completed goals reset');
+    }
+
+    function renderExpenseLog() {
+      const log = document.getElementById('expenseLog');
+      log.innerHTML = '';
+      const monthly = {};
+      expenses.forEach(exp => {
+        const month = new Date(exp.date).toLocaleString('default', { month: 'long', year: 'numeric' });
+        if (!monthly[month]) monthly[month] = 0;
+        monthly[month] += exp.amount;
+      });
+      for (const month in monthly) {
+        const p = document.createElement('p');
+        p.innerText = `${month}: ₱${monthly[month].toFixed(2)}`;
+        log.appendChild(p);
+      }
+    }
+
     updateAllowanceDisplay();
-    alert('Remaining allowance transferred to savings');
-  } else {
-    alert('No remaining allowance to transfer.');
-  }
-}
-
-function resetSavings() {
-  savings = 0;
-  saveAll();
-  updateSavings();
-  alert('Successfully reset savings');
-}
-
-function updateSavings() {
-  document.getElementById('totalSavings').innerText = savings.toFixed(2);
-}
-
-function addGoal() {
-  const name = document.getElementById('goalName').value;
-  const price = parseFloat(document.getElementById('goalAmount').value);
-  if (name && price > 0) {
-    goals.push({ name, price });
-    saveAll();
-    renderGoals();
-    alert('Goal added successfully');
-  }
-}
-
-function renderGoals() {
-  const list = document.getElementById('goalList');
-  list.innerHTML = "";
-  goals.forEach((goal, index) => {
-    const goalDiv = document.createElement('div');
-    const affordable = savings >= goal.price;
-    goalDiv.className = affordable ? 'goal-green' : 'goal-red';
-    goalDiv.innerHTML = `
-      <p><strong>${goal.name}</strong> - ₱${goal.price}</p>
-      <div class="progress"><div class="progress-bar" style="width:${Math.min(100, (savings / goal.price) * 100)}%"></div></div>
-      ${affordable ? '<button onclick="completeGoal(' + index + ')">DONE</button>' : ''}
-    `;
-    list.appendChild(goalDiv);
-  });
-}
-
-function completeGoal(index) {
-  const goal = goals[index];
-  if (savings >= goal.price) {
-    savings -= goal.price;
-    completedGoals.push(goal);
-    goals.splice(index, 1);
-    saveAll();
+    renderExpenses();
     updateSavings();
     renderGoals();
     renderCompletedGoals();
-    alert('Goal marked as completed');
-  }
-}
-
-function renderCompletedGoals() {
-  const div = document.getElementById('completedGoals');
-  div.innerHTML = '';
-  completedGoals.forEach(goal => {
-    const p = document.createElement('p');
-    p.innerText = `${goal.name} - ₱${goal.price}`;
-    div.appendChild(p);
-  });
-}
-
-function resetCompletedGoals() {
-  completedGoals = [];
-  saveAll();
-  renderCompletedGoals();
-  alert('Completed goals reset');
-}
-
-function renderExpenseLog() {
-  const log = document.getElementById('expenseLog');
-  log.innerHTML = '';
-  const monthly = {};
-
-  expenses.forEach(exp => {
-    const month = new Date(exp.date).toLocaleString('default', { month: 'long', year: 'numeric' });
-    if (!monthly[month]) monthly[month] = 0;
-    monthly[month] += exp.amount;
-  });
-
-  for (const month in monthly) {
-    const p = document.createElement('p');
-    p.innerText = `${month}: ₱${monthly[month].toFixed(2)}`;
-    log.appendChild(p);
-  }
-}
-
-updateAllowanceDisplay();
-renderExpenses();
-updateSavings();
-renderGoals();
-renderCompletedGoals();
-renderExpenseLog();
-</script>
+    renderExpenseLog();
+  </script>
 </body>
 </html>
-  
