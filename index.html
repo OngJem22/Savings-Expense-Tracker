@@ -4,94 +4,117 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Expense & Savings Tracker</title>
-  <link rel="manifest" href="manifest.json" />
   <style>
     :root {
-      --bg-color: #f4f1ee;
-      --text-color: #4b3832;
-      --section-bg: #fff8f0;
-      --button-bg: #8b5e3c;
-      --button-text: #fff;
-      --goal-green: #d4e9d5;
-      --goal-red: #f3c6c6;
+      --bg: #fdfcfa;
+      --text: #2c1e1a;
+      --box: #ffffff;
+      --accent: #8b5e3c;
+      --success: #d4edda;
+      --error: #f8d7da;
     }
     body.dark {
-      --bg-color: #2d1f17;
-      --text-color: #ffffff;
-      --section-bg: #3e2c23;
-      --button-bg: #a9745b;
-      --button-text: #ffffff;
-      --goal-green: #497d53;
-      --goal-red: #9b3f3f;
+      --bg: #1e140f;
+      --text: #f8f6f4;
+      --box: #2a1b15;
     }
     body {
-      font-family: 'Segoe UI', sans-serif;
-      margin: 10px;
-      background: var(--bg-color);
-      color: var(--text-color);
+      background: var(--bg);
+      color: var(--text);
+      font-family: sans-serif;
+      padding: 10px;
+      margin: 0;
     }
+    h1, h2 { text-align: center; }
     .section {
-      background: var(--section-bg);
-      padding: 20px;
+      background: var(--box);
+      padding: 15px;
       margin-bottom: 20px;
-      border-radius: 12px;
-    }
-    h1, h2 {
-      text-align: center;
-      font-weight: bold;
-    }
-    label {
-      display: block;
-      margin-top: 10px;
+      border-radius: 10px;
+      box-shadow: 0 0 5px rgba(0,0,0,0.1);
     }
     input, select, button {
       padding: 10px;
-      width: 100%;
       margin-top: 5px;
-      border-radius: 6px;
+      margin-bottom: 10px;
+      width: 100%;
+      border-radius: 8px;
       border: 1px solid #ccc;
+      box-sizing: border-box;
     }
     button {
-      background-color: var(--button-bg);
-      color: var(--button-text);
+      background: var(--accent);
+      color: white;
       border: none;
-      cursor: pointer;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+    }
+    td, th {
+      border: 1px solid #ccc;
+      padding: 8px;
+      font-size: 14px;
+    }
+    .goal-green { background: var(--success); }
+    .goal-red { background: var(--error); }
+    .progress {
+      height: 8px;
+      background: #ccc;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    .progress-bar {
+      height: 100%;
+      background: var(--accent);
+      transition: width 0.3s ease;
+    }
+    .tabs button {
+      flex: 1;
+      background: var(--accent);
+      color: white;
+      border: none;
+      margin: 2px;
+      padding: 10px;
     }
     .tabs {
       display: flex;
       flex-wrap: wrap;
-      justify-content: space-around;
-      margin: 10px 0;
+      margin-bottom: 10px;
     }
-    .tabs button {
-      flex: 1;
-      margin: 4px;
-      font-weight: bold;
-    }
-    .goal-red { background: var(--goal-red); }
-    .goal-green { background: var(--goal-green); }
-    .progress { height: 10px; background: #ccc; border-radius: 10px; overflow: hidden; }
-    .progress-bar { height: 100%; background: var(--button-bg); }
-    .bold { font-weight: bold; font-size: 20px; }
-    .hidden { display: none; }
     .nav-toggle {
       position: fixed;
       top: 10px;
       right: 10px;
       width: 40px;
       height: 40px;
-      border-radius: 50%;
-      background: var(--button-bg);
-      color: var(--button-text);
+      background: var(--accent);
+      color: white;
       font-size: 18px;
-      text-align: center;
-      line-height: 40px;
+      border-radius: 50%;
+      border: none;
     }
+    .toast {
+      position: fixed;
+      bottom: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--accent);
+      color: white;
+      padding: 10px 20px;
+      border-radius: 20px;
+      display: none;
+      z-index: 1000;
+    }
+    .hidden { display: none; }
   </style>
 </head>
 <body>
   <button class="nav-toggle" onclick="document.body.classList.toggle('dark')">🌓</button>
+  <div class="toast" id="toast"></div>
   <h1>Expense & Savings Tracker</h1>
+
   <div class="tabs">
     <button onclick="showTab('allowance')">Allowance</button>
     <button onclick="showTab('expenses')">Expenses</button>
@@ -101,12 +124,9 @@
     <button onclick="showTab('log')">Expense Log</button>
   </div>
 
-  <!-- ALLOWANCE -->
   <div id="allowance" class="section">
     <h2>Set Allowance</h2>
-    <label>Amount</label>
-    <input type="number" id="allowanceAmount" />
-    <label>Type</label>
+    <input type="number" id="allowanceAmount" placeholder="Amount">
     <select id="allowanceType">
       <option value="daily">Daily</option>
       <option value="weekly">Weekly</option>
@@ -115,12 +135,9 @@
     <button onclick="setAllowance()">Set Allowance</button>
   </div>
 
-  <!-- EXPENSES -->
   <div id="expenses" class="section hidden">
     <h2>Add Expense</h2>
-    <label>Amount</label>
-    <input type="number" id="expenseAmount" />
-    <label>Category</label>
+    <input type="number" id="expenseAmount" placeholder="Amount" />
     <select id="expenseCategory">
       <option value="FOOD">FOOD</option>
       <option value="DRINKS">DRINKS</option>
@@ -131,18 +148,15 @@
     <button onclick="resetExpenses()">Reset Expenses</button>
   </div>
 
-  <!-- SAVINGS -->
   <div id="savings" class="section hidden">
     <h2>Savings</h2>
-    <p class="bold">Total Savings: ₱<span id="totalSavings">0</span></p>
-    <label>Manual Add</label>
-    <input type="number" id="manualSaveAmount" />
+    <p><strong>Total Savings: ₱<span id="totalSavings">0</span></strong></p>
+    <input type="number" id="manualSaveAmount" placeholder="Manual Add">
     <button onclick="addToSavings()">Add to Savings</button>
     <button onclick="transferRemainingAllowance()">Transfer Remaining Allowance</button>
     <button onclick="resetSavings()">Reset Savings</button>
   </div>
 
-  <!-- GOALS -->
   <div id="goals" class="section hidden">
     <h2>Goals</h2>
     <input id="goalName" placeholder="Goal Name" />
@@ -151,14 +165,12 @@
     <table id="goalsTable"></table>
   </div>
 
-  <!-- COMPLETED GOALS -->
   <div id="completed" class="section hidden">
     <h2>Completed Goals</h2>
     <table id="completedGoalsTable"></table>
     <button onclick="resetCompletedGoals()">Reset Completed</button>
   </div>
 
-  <!-- EXPENSE LOG -->
   <div id="log" class="section hidden">
     <h2>Expense Log</h2>
     <table id="expenseLogBody"></table>
@@ -177,31 +189,44 @@
       if (id === 'log') renderExpenseLog();
     }
 
+    function showToast(msg) {
+      const toast = document.getElementById('toast');
+      toast.textContent = msg;
+      toast.style.display = 'block';
+      setTimeout(() => toast.style.display = 'none', 2000);
+    }
+
     function setAllowance() {
       allowance.amount = parseFloat(document.getElementById('allowanceAmount').value);
       allowance.type = document.getElementById('allowanceType').value;
       localStorage.setItem('allowance', JSON.stringify(allowance));
       resetExpenses();
+      showToast("✅ Allowance Set & Expenses Reset");
     }
 
     function addExpense() {
       const amount = parseFloat(document.getElementById('expenseAmount').value);
       const category = document.getElementById('expenseCategory').value;
-      const date = new Date().toLocaleDateString();
-      expenses.push({ amount, category, date });
+      if (!amount || amount <= 0) return showToast("⚠️ Enter valid amount");
+      expenses.push({ amount, category, date: new Date().toLocaleDateString() });
       localStorage.setItem('expenses', JSON.stringify(expenses));
+      showToast("✅ Expense Added");
     }
 
     function resetExpenses() {
       expenses = [];
       localStorage.setItem('expenses', JSON.stringify([]));
+      showToast("♻️ Expenses Reset");
     }
 
     function addToSavings() {
       const amt = parseFloat(document.getElementById('manualSaveAmount').value);
-      savings += amt;
-      localStorage.setItem('savings', savings);
-      updateSavings();
+      if (amt > 0) {
+        savings += amt;
+        localStorage.setItem('savings', savings);
+        updateSavings();
+        showToast("✅ Added to Savings");
+      }
     }
 
     function transferRemainingAllowance() {
@@ -211,6 +236,9 @@
         savings += remaining;
         localStorage.setItem('savings', savings);
         updateSavings();
+        showToast("✅ Remaining Transferred to Savings");
+      } else {
+        showToast("⚠️ No remaining allowance");
       }
     }
 
@@ -218,6 +246,7 @@
       savings = 0;
       localStorage.setItem('savings', '0');
       updateSavings();
+      showToast("♻️ Savings Reset");
     }
 
     function updateSavings() {
@@ -228,24 +257,24 @@
     function addGoal() {
       const name = document.getElementById('goalName').value;
       const price = parseFloat(document.getElementById('goalPrice').value);
+      if (!name || !price) return;
       goals.push({ name, price });
       localStorage.setItem('goals', JSON.stringify(goals));
       renderGoals();
+      showToast("✅ Goal Added");
     }
 
     function renderGoals() {
       const table = document.getElementById('goalsTable');
       table.innerHTML = '';
       goals.forEach((g, i) => {
-        const withinBudget = savings >= g.price;
+        const within = savings >= g.price;
         const progress = Math.min((savings / g.price) * 100, 100);
         table.innerHTML += `
-          <tr class="${withinBudget ? 'goal-green' : 'goal-red'}">
+          <tr class="${within ? 'goal-green' : 'goal-red'}">
             <td>${g.name} - ₱${g.price}</td>
-            <td>
-              <div class="progress"><div class="progress-bar" style="width:${progress}%"></div></div>
-            </td>
-            <td>${withinBudget ? `<button onclick="completeGoal(${i})">DONE</button>` : ''}</td>
+            <td><div class="progress"><div class="progress-bar" style="width:${progress}%"></div></div></td>
+            <td>${within ? `<button onclick="completeGoal(${i})">DONE</button>` : ''}</td>
           </tr>`;
       });
     }
@@ -256,11 +285,12 @@
         savings -= g.price;
         completedGoals.push({ ...g, date: new Date().toLocaleDateString() });
         goals.splice(i, 1);
-        localStorage.setItem('savings', savings);
         localStorage.setItem('goals', JSON.stringify(goals));
         localStorage.setItem('completedGoals', JSON.stringify(completedGoals));
+        localStorage.setItem('savings', savings);
         updateSavings();
         renderCompletedGoals();
+        showToast("🎉 Goal Completed!");
       }
     }
 
@@ -273,6 +303,7 @@
       completedGoals = [];
       localStorage.setItem('completedGoals', JSON.stringify([]));
       renderCompletedGoals();
+      showToast("♻️ Completed Goals Reset");
     }
 
     function renderExpenseLog() {
