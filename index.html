@@ -2,87 +2,109 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Expense & Savings Tracker</title>
+  <link rel="manifest" href="manifest.json" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     :root {
-      --bg: #fdfcfa;
-      --text: #2c1e1a;
-      --box: #ffffff;
-      --accent: #8b5e3c;
-      --success: #d4edda;
-      --error: #f8d7da;
+      --bg-color: #f4f1ee;
+      --text-color: #4b3832;
+      --section-bg: #fff8f0;
+      --button-bg: #8b5e3c;
+      --button-text: #fff;
+      --goal-green: #d4e9d5;
+      --goal-red: #f3c6c6;
     }
     body.dark {
-      --bg: #1e140f;
-      --text: #f8f6f4;
-      --box: #2a1b15;
+      --bg-color: #2d1f17;
+      --text-color: #ffffff;
+      --section-bg: #3e2c23;
+      --button-bg: #a9745b;
+      --button-text: #ffffff;
+      --goal-green: #497d53;
+      --goal-red: #9b3f3f;
     }
     body {
-      background: var(--bg);
-      color: var(--text);
-      font-family: sans-serif;
-      padding: 10px;
-      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      margin: 10px;
+      background: var(--bg-color);
+      color: var(--text-color);
+      transition: background 0.3s ease, color 0.3s ease;
     }
-    h1, h2 { text-align: center; }
+    h1, h2 {
+      text-align: center;
+      font-weight: bold;
+      color: var(--text-color);
+    }
     .section {
-      background: var(--box);
-      padding: 15px;
+      background: var(--section-bg);
+      padding: 20px;
       margin-bottom: 20px;
-      border-radius: 10px;
-      box-shadow: 0 0 5px rgba(0,0,0,0.1);
+      border-radius: 12px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      transition: background 0.3s ease;
+    }
+    label {
+      display: block;
+      margin-top: 10px;
+      font-weight: 500;
     }
     input, select, button {
       padding: 10px;
-      margin-top: 5px;
-      margin-bottom: 10px;
       width: 100%;
-      border-radius: 8px;
-      border: 1px solid #ccc;
+      margin-top: 5px;
+      font-size: 16px;
       box-sizing: border-box;
+      border: 1px solid #ccc;
+      border-radius: 6px;
     }
     button {
-      background: var(--accent);
-      color: white;
+      background-color: var(--button-bg);
+      color: var(--button-text);
       border: none;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
     }
-    table {
+    button:hover {
+      background-color: #6f4324;
+    }
+    table, th, td {
       width: 100%;
-      border-collapse: collapse;
       margin-top: 10px;
+      border-collapse: collapse;
+      background: var(--section-bg);
+      color: var(--text-color);
     }
-    td, th {
+    th, td {
+      padding: 10px;
       border: 1px solid #ccc;
-      padding: 8px;
       font-size: 14px;
+      text-align: left;
     }
-   .goal-green {
-  background: var(--success);
-  color: #1e392a; /* Dark green text for readability */
-}
-.goal-red {
-  background: var(--error);
-  color: #5a1a1a; /* Dark red text for readability */
-}
-
+    .goal-green {
+      background: var(--goal-green);
+      color: #1e392a;
+    }
+    .goal-red {
+      background: var(--goal-red);
+      color: #5a1a1a;
+    }
+    body.dark .goal-green,
+    body.dark .goal-red {
+      color: #ffffff;
+    }
+    .progress {
+      height: 16px;
+      background-color: #e0e0e0;
+      border-radius: 8px;
+      overflow: hidden;
+      margin-top: 4px;
+    }
     .progress-bar {
       height: 100%;
-      background: var(--accent);
-      transition: width 0.3s ease;
-    }
-    .tabs button {
-      flex: 1;
-      background: var(--accent);
-      color: white;
-      border: none;
-      margin: 2px;
-      padding: 10px;
-    }
-    .tabs {
-      display: flex;
-      flex-wrap: wrap;
-      margin-bottom: 10px;
+      background-color: #8b5e3c;
+      transition: width 0.4s ease;
     }
     .nav-toggle {
       position: fixed;
@@ -90,32 +112,57 @@
       right: 10px;
       width: 40px;
       height: 40px;
-      background: var(--accent);
-      color: white;
-      font-size: 18px;
       border-radius: 50%;
+      background: var(--button-bg);
+      color: var(--button-text);
       border: none;
+      font-size: 18px;
+      text-align: center;
+      line-height: 40px;
+      z-index: 9999;
     }
-    .toast {
-      position: fixed;
-      bottom: 10px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: var(--accent);
-      color: white;
-      padding: 10px 20px;
-      border-radius: 20px;
+    .tabs {
+      display: flex;
+      justify-content: space-around;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+    .tabs button {
+      flex: 1;
+      padding: 10px;
+      background: var(--button-bg);
+      color: var(--button-text);
+      border: none;
+      font-weight: bold;
+      margin: 4px;
+    }
+    .hidden {
       display: none;
-      z-index: 1000;
     }
-    .hidden { display: none; }
+    .bold {
+      font-weight: bold;
+      font-size: 20px;
+    }
+    canvas {
+      background: #fff;
+      border-radius: 8px;
+      padding: 10px;
+    }
+    @media (max-width: 600px) {
+      input, select, button {
+        font-size: 14px;
+        padding: 8px;
+      }
+      th, td {
+        font-size: 12px;
+        padding: 8px;
+      }
+    }
   </style>
 </head>
 <body onload="showTab('allowance')">
   <button class="nav-toggle" onclick="document.body.classList.toggle('dark')">🌓</button>
-  <div class="toast" id="toast"></div>
   <h1>Expense & Savings Tracker</h1>
-
   <div class="tabs">
     <button onclick="showTab('allowance')">Allowance</button>
     <button onclick="showTab('expenses')">Expenses</button>
@@ -124,77 +171,26 @@
     <button onclick="showTab('completed')">Completed</button>
     <button onclick="showTab('log')">Expense Log</button>
   </div>
+  <script>
+    // JavaScript logic goes here
+let allowance = JSON.parse(localStorage.getItem("allowance")) || { amount: 0, type: "daily", date: new Date().toISOString() };
+let expenses = JSON.parse(localStorage.getItem("expenses")) || [];
+let savings = parseFloat(localStorage.getItem("savings")) || 0;
+let goals = JSON.parse(localStorage.getItem("goals")) || [];
+let completedGoals = JSON.parse(localStorage.getItem("completedGoals")) || [];
 
-  <div id="allowance" class="section">
-    <h2>Set Allowance</h2>
-    <input type="number" id="allowanceAmount" placeholder="Amount">
-    <select id="allowanceType">
-      <option value="daily">Daily</option>
-      <option value="weekly">Weekly</option>
-      <option value="monthly">Monthly</option>
-    </select>
-    <button onclick="setAllowance()">Set Allowance</button>
-  </div>
-  <div id="expenses" class="section hidden">
-    <h2>Add Expense</h2>
-    <input type="number" id="expenseAmount" placeholder="Amount">
-    <select id="expenseCategory">
-      <option value="FOOD">FOOD</option>
-      <option value="DRINKS">DRINKS</option>
-      <option value="TRANSPO">TRANSPO</option>
-      <option value="OTHERS">OTHERS</option>
-    </select>
-    <button onclick="addExpense()">Add Expense</button>
-    <button onclick="resetExpenses()">Reset Expenses</button>
-    <div id="expenseList"></div>
-  </div>
-
-  <div id="savings" class="section hidden">
-    <h2>Total Savings: <span id="totalSavings" style="font-weight:bold;"></span></h2>
-    <input type="number" id="manualSavings" placeholder="Add to Savings">
-    <button onclick="addManualSavings()">Add to Savings</button>
-    <button onclick="transferToSavings()">Transfer Remaining Allowance</button>
-    <button onclick="resetSavings()">Reset Savings</button>
-  </div>
-
-  <div id="goals" class="section hidden">
-    <h2>Goals</h2>
-    <input type="text" id="goalName" placeholder="Goal name">
-    <input type="number" id="goalPrice" placeholder="Goal amount">
-    <button onclick="addGoal()">Add Goal</button>
-    <div id="goalList"></div>
-  </div>
-
-  <div id="completed" class="section hidden">
-    <h2>Completed Goals</h2>
-    <button onclick="resetCompleted()">Reset Completed Goals</button>
-    <div id="completedList"></div>
-  </div>
-
-  <div id="log" class="section hidden">
-    <h2>Expense Log</h2>
-    <div id="expenseLog"></div>
-  </div>
-<script>
-  let allowance = JSON.parse(localStorage.getItem('allowance')) || { amount: 0, type: 'daily' };
-  let expenses = JSON.parse(localStorage.getItem('expenses')) || [];
-  let savings = parseFloat(localStorage.getItem('savings') || '0');
-  let goals = JSON.parse(localStorage.getItem('goals') || '[]');
-  let completedGoals = JSON.parse(localStorage.getItem('completedGoals') || '[]');
+function saveAll() {
+  localStorage.setItem("allowance", JSON.stringify(allowance));
+  localStorage.setItem("expenses", JSON.stringify(expenses));
+  localStorage.setItem("savings", savings.toString());
+  localStorage.setItem("goals", JSON.stringify(goals));
+  localStorage.setItem("completedGoals", JSON.stringify(completedGoals));
+}
 
 function showTab(id) {
-  // Hide all sections
-  document.querySelectorAll('.section').forEach(section => {
-    section.classList.add('hidden');
-  });
-
-  // Show the selected one
-  const target = document.getElementById(id);
-  if (target) {
-    target.classList.remove('hidden');
-  }
-
-  // Optional: refresh data per section
+  document.querySelectorAll('.section').forEach(section => section.classList.add('hidden'));
+  const tab = document.getElementById(id);
+  if (tab) tab.classList.remove('hidden');
   if (id === 'expenses') renderExpenses();
   if (id === 'savings') updateSavings();
   if (id === 'goals') renderGoals();
@@ -202,207 +198,177 @@ function showTab(id) {
   if (id === 'log') renderExpenseLog();
 }
 
-
-
-
-  function showToast(msg) {
-    const toast = document.getElementById('toast');
-    toast.textContent = msg;
-    toast.style.display = 'block';
-    setTimeout(() => toast.style.display = 'none', 2000);
+function setAllowance() {
+  const amount = parseFloat(document.getElementById('allowanceAmount').value);
+  const type = document.getElementById('allowanceType').value;
+  if (amount > 0) {
+    allowance = { amount, type, date: new Date().toISOString() };
+    expenses = [];
+    saveAll();
+    updateAllowanceDisplay();
+    alert('Successfully set allowance');
   }
+}
 
-  function setAllowance() {
-    allowance.amount = parseFloat(document.getElementById('allowanceAmount').value);
-    allowance.type = document.getElementById('allowanceType').value;
-    localStorage.setItem('allowance', JSON.stringify(allowance));
-    showToast('✅ Allowance set');
-  }
+function resetAllowance() {
+  allowance.amount = 0;
+  saveAll();
+  updateAllowanceDisplay();
+  alert('Successfully reset allowance');
+}
 
-  function addExpense() {
-    const amount = parseFloat(document.getElementById('expenseAmount').value);
-    const category = document.getElementById('expenseCategory').value;
-    if (isNaN(amount) || amount <= 0) return showToast('❌ Invalid amount');
-    const todaySpent = expenses.reduce((sum, e) => e.date === today() ? sum + e.amount : sum, 0);
-    if ((todaySpent + amount) > allowance.amount) {
-      showToast('❌ Not enough allowance');
-      return;
-    }
-    expenses.push({ amount, category, date: today() });
-    localStorage.setItem('expenses', JSON.stringify(expenses));
-    showToast('✅ Expense added');
+function updateAllowanceDisplay() {
+  document.getElementById('allowanceDisplay').innerText = 'Allowance: ₱' + allowance.amount;
+}
+
+function addExpense() {
+  const amount = parseFloat(document.getElementById('expenseAmount').value);
+  const category = document.getElementById('expenseCategory').value;
+  if (amount > 0 && allowance.amount >= amount) {
+    allowance.amount -= amount;
+    expenses.push({ amount, category, date: new Date().toISOString() });
+    saveAll();
     renderExpenses();
+    alert('Successfully added expense');
+  } else {
+    alert('Not enough allowance to add this expense.');
   }
+}
 
-  function renderExpenses() {
-    const list = document.getElementById('expenseList');
-    const todayExpenses = expenses.filter(e => e.date === today());
-    if (!todayExpenses.length) return list.innerHTML = '<p>No expenses today</p>';
-    let html = '<table><tr><th>Amount</th><th>Category</th></tr>';
-    todayExpenses.forEach(e => {
-      html += `<tr><td>${e.amount}</td><td>${e.category}</td></tr>`;
-    });
-    html += '</table>';
-    list.innerHTML = html;
-  }
+function resetExpenses() {
+  expenses = [];
+  saveAll();
+  renderExpenses();
+  alert('Successfully reset expenses');
+}
 
-  function resetExpenses() {
-    expenses = expenses.filter(e => e.date !== today());
-    localStorage.setItem('expenses', JSON.stringify(expenses));
-    showToast('✅ Expenses reset');
-    renderExpenses();
-  }
-
-  function addManualSavings() {
-    const amt = parseFloat(document.getElementById('manualSavings').value);
-    if (!amt || amt <= 0) return showToast('❌ Invalid amount');
-    savings += amt;
-    localStorage.setItem('savings', savings);
-    showToast('✅ Saved');
+function renderExpenses() {
+  const list = document.getElementById('expenseList');
+  list.innerHTML = "";
+  expenses.forEach((exp, index) => {
+    const item = document.createElement('p');
+    item.innerText = `${exp.category}: ₱${exp.amount} - ${new Date(exp.date).toLocaleDateString()}`;
+    list.appendChild(item);
+  });
+}
+    function manualAddSavings() {
+  const add = prompt("Enter amount to save:");
+  const value = parseFloat(add);
+  if (!isNaN(value) && value > 0) {
+    savings += value;
+    saveAll();
     updateSavings();
+    alert('Successfully added to savings');
   }
+}
 
-  function transferToSavings() {
-    const todaySpent = expenses.reduce((sum, e) => e.date === today() ? sum + e.amount : sum, 0);
-    const remaining = allowance.amount - todaySpent;
-    if (remaining <= 0) return showToast('❌ No remaining allowance');
-    savings += remaining;
-    localStorage.setItem('savings', savings);
-    showToast('✅ Remaining allowance saved');
-    resetExpenses();
+function transferRemaining() {
+  if (allowance.amount > 0) {
+    savings += allowance.amount;
+    allowance.amount = 0;
+    saveAll();
     updateSavings();
+    updateAllowanceDisplay();
+    alert('Remaining allowance transferred to savings');
+  } else {
+    alert('No remaining allowance to transfer.');
   }
+}
 
-  function updateSavings() {
-    document.getElementById('totalSavings').textContent = savings.toFixed(2);
-  }
+function resetSavings() {
+  savings = 0;
+  saveAll();
+  updateSavings();
+  alert('Successfully reset savings');
+}
 
-  function resetSavings() {
-    savings = 0;
-    localStorage.setItem('savings', savings);
-    showToast('✅ Savings reset');
-    updateSavings();
-  }
+function updateSavings() {
+  document.getElementById('totalSavings').innerText = savings.toFixed(2);
+}
 
-  function addGoal() {
-    const name = document.getElementById('goalName').value;
-    const price = parseFloat(document.getElementById('goalPrice').value);
-    if (!name || isNaN(price)) return showToast('❌ Invalid goal');
+function addGoal() {
+  const name = document.getElementById('goalName').value;
+  const price = parseFloat(document.getElementById('goalAmount').value);
+  if (name && price > 0) {
     goals.push({ name, price });
-    localStorage.setItem('goals', JSON.stringify(goals));
-    showToast('✅ Goal added');
+    saveAll();
     renderGoals();
+    alert('Goal added successfully');
   }
+}
 
 function renderGoals() {
-  const container = document.getElementById('goalList');
-  container.innerHTML = '';
+  const list = document.getElementById('goalList');
+  list.innerHTML = "";
   goals.forEach((goal, index) => {
-    const percent = Math.min(100, (savings / goal.price) * 100);
-    const complete = savings >= goal.price;
-    container.innerHTML += `
-      <div class="${complete ? 'goal-green' : 'goal-red'}" style="margin-bottom:10px;padding:10px;border-radius:8px">
-        <b>${goal.name}</b> - ₱${goal.price}
-        ${!complete ? `
-          <div class="progress">
-            <div class="progress-bar" style="width:${Math.max(5, percent)}%"></div>
-          </div>` : ''}
-        ${complete ? `<button onclick="completeGoal(${index})">DONE</button>` : ''}
-      </div>
+    const goalDiv = document.createElement('div');
+    const affordable = savings >= goal.price;
+    goalDiv.className = affordable ? 'goal-green' : 'goal-red';
+    goalDiv.innerHTML = `
+      <p><strong>${goal.name}</strong> - ₱${goal.price}</p>
+      <div class="progress"><div class="progress-bar" style="width:${Math.min(100, (savings / goal.price) * 100)}%"></div></div>
+      ${affordable ? '<button onclick="completeGoal(' + index + ')">DONE</button>' : ''}
     `;
+    list.appendChild(goalDiv);
   });
 }
 
-
-  function completeGoal(index) {
-    const goal = goals[index];
-    if (savings >= goal.price) {
-      savings -= goal.price;
-      completedGoals.push(goal);
-      goals.splice(index, 1);
-      localStorage.setItem('savings', savings);
-      localStorage.setItem('completedGoals', JSON.stringify(completedGoals));
-      localStorage.setItem('goals', JSON.stringify(goals));
-      showToast('✅ Goal completed');
-      renderGoals();
-      updateSavings();
-      renderCompletedGoals();
-    }
-  }
-
-  function renderCompletedGoals() {
-    const container = document.getElementById('completedList');
-    if (!completedGoals.length) {
-      container.innerHTML = '<p>No completed goals</p>';
-      return;
-    }
-    container.innerHTML = '<ul>' + completedGoals.map(g => `<li>${g.name} - ₱${g.price}</li>`).join('') + '</ul>';
-  }
-
-  function resetCompleted() {
-    completedGoals = [];
-    localStorage.setItem('completedGoals', JSON.stringify(completedGoals));
-    showToast('✅ Completed goals reset');
+function completeGoal(index) {
+  const goal = goals[index];
+  if (savings >= goal.price) {
+    savings -= goal.price;
+    completedGoals.push(goal);
+    goals.splice(index, 1);
+    saveAll();
+    updateSavings();
+    renderGoals();
     renderCompletedGoals();
+    alert('Goal marked as completed');
   }
+}
+
+function renderCompletedGoals() {
+  const div = document.getElementById('completedGoals');
+  div.innerHTML = '';
+  completedGoals.forEach(goal => {
+    const p = document.createElement('p');
+    p.innerText = `${goal.name} - ₱${goal.price}`;
+    div.appendChild(p);
+  });
+}
+
+function resetCompletedGoals() {
+  completedGoals = [];
+  saveAll();
+  renderCompletedGoals();
+  alert('Completed goals reset');
+}
 
 function renderExpenseLog() {
-  const logDiv = document.getElementById('expenseLog');
-  if (!expenses.length) {
-    logDiv.innerHTML = '<p>No expenses yet.</p>';
-    return;
-  }
-  // 1. Group expenses by date
-  let grouped = {};
-  let currentMonth = new Date().toISOString().slice(0, 7); // e.g., "2025-07"
-  let monthlyTotal = 0;
-  expenses.forEach(e => {
-    if (!grouped[e.date]) grouped[e.date] = [];
-    grouped[e.date].push(e);
-    // 2. If expense is from current month, add to monthly total
-    if (e.date.startsWith(currentMonth)) {
-      monthlyTotal += e.amount;
-    }
-  });
-  // 3. Render log
-  let html = `<h3>Total Expenses for ${currentMonth}: ₱${monthlyTotal.toFixed(2)}</h3>`;
-  for (let date in grouped) {
-    html += `<h4>${date}</h4><table><tr><th>Amount</th><th>Category</th></tr>`;
-    grouped[date].forEach(e => {
-      html += `<tr><td>${e.amount}</td><td>${e.category}</td></tr>`;
-    });
-    html += '</table>';
-  }
+  const log = document.getElementById('expenseLog');
+  log.innerHTML = '';
+  const monthly = {};
 
-  logDiv.innerHTML = html;
+  expenses.forEach(exp => {
+    const month = new Date(exp.date).toLocaleString('default', { month: 'long', year: 'numeric' });
+    if (!monthly[month]) monthly[month] = 0;
+    monthly[month] += exp.amount;
+  });
+
+  for (const month in monthly) {
+    const p = document.createElement('p');
+    p.innerText = `${month}: ₱${monthly[month].toFixed(2)}`;
+    log.appendChild(p);
+  }
 }
 
-    }
-    let grouped = {};
-    expenses.forEach(e => {
-      if (!grouped[e.date]) grouped[e.date] = [];
-      grouped[e.date].push(e);
-    });
-    let html = '';
-    for (let date in grouped) {
-      html += `<h3>${date}</h3><table><tr><th>Amount</th><th>Category</th></tr>`;
-      grouped[date].forEach(e => {
-        html += `<tr><td>${e.amount}</td><td>${e.category}</td></tr>`;
-      });
-      html += '</table>';
-    }
-    logDiv.innerHTML = html;
-  }
-
-  function today() {
-    return new Date().toISOString().split('T')[0];
-  }
-
-  // Load initial
-  updateSavings();
-  renderGoals();
-  renderCompletedGoals();
-  renderExpenses();
+updateAllowanceDisplay();
+renderExpenses();
+updateSavings();
+renderGoals();
+renderCompletedGoals();
+renderExpenseLog();
 </script>
 </body>
 </html>
+  
