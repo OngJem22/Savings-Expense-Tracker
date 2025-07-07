@@ -184,6 +184,9 @@
   </div>  <div class="section" id="savings-section">
     <h2>Savings</h2>
     <p id="savingsDisplay">₱0</p>
+    <label for="manualSavings">Add to Savings</label>
+    <input type="number" id="manualSavings">
+    <button onclick="addToSavings()">Add Savings</button>
     <button onclick="transferToSavings()">Transfer Remaining Allowance to Savings</button>
   </div>  <div class="section" id="goals-section">
     <h2>Goals</h2>
@@ -203,8 +206,18 @@
       document.getElementById('savingsDisplay').textContent = `₱${savings.toFixed(2)}`;
     }
 
+    function addToSavings() {
+      const amount = parseFloat(document.getElementById('manualSavings').value);
+      if (!isNaN(amount) && amount > 0) {
+        savings += amount;
+        localStorage.setItem("savings", savings);
+        document.getElementById('manualSavings').value = '';
+        updateSavingsDisplay();
+        renderGoals();
+      }
+    }
+
     function setAllowance() {
-      // Implement logic if needed
       alert('Allowance set.');
     }
 
@@ -226,7 +239,7 @@
     }
 
     function transferToSavings() {
-      let remaining = 0; // Add logic to calculate remaining allowance
+      let remaining = 0;
       savings += remaining;
       localStorage.setItem('savings', savings);
       updateSavingsDisplay();
