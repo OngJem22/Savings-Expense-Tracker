@@ -111,7 +111,7 @@
     .hidden { display: none; }
   </style>
 </head>
-<body>
+<body onload="showTab('allowance')">
   <button class="nav-toggle" onclick="document.body.classList.toggle('dark')">🌓</button>
   <div class="toast" id="toast"></div>
   <h1>Expense & Savings Tracker</h1>
@@ -182,20 +182,26 @@
   let goals = JSON.parse(localStorage.getItem('goals') || '[]');
   let completedGoals = JSON.parse(localStorage.getItem('completedGoals') || '[]');
 
-  function showTab(id) {
+function showTab(id) {
+  // Hide all sections
   document.querySelectorAll('.section').forEach(section => {
     section.classList.add('hidden');
   });
 
+  // Show the selected one
   const target = document.getElementById(id);
-  if (target) target.classList.remove('hidden');
+  if (target) {
+    target.classList.remove('hidden');
+  }
 
+  // Optional: refresh data per section
   if (id === 'expenses') renderExpenses();
   if (id === 'savings') updateSavings();
   if (id === 'goals') renderGoals();
   if (id === 'completed') renderCompletedGoals();
   if (id === 'log') renderExpenseLog();
 }
+
 
 
 
