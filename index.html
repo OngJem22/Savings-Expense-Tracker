@@ -281,25 +281,25 @@
     renderGoals();
   }
 
-  function renderGoals() {
-    const container = document.getElementById('goalList');
+function renderGoals() {
+  const container = document.getElementById('goalList');
+  container.innerHTML = '';
+  goals.forEach((goal, index) => {
+    const percent = Math.min(100, (savings / goal.price) * 100);
+    const complete = savings >= goal.price;
     container.innerHTML += `
-  <div class="${complete ? 'goal-green' : 'goal-red'}" style="margin-bottom:10px;padding:10px;border-radius:8px">
-    <b>${goal.name}</b> - ₱${goal.price}
-    ${!complete ? `
-      <div class="progress">
-        <div class="progress-bar" style="width:${Math.max(5, percent)}%"></div>
-      </div>` : ''}
-    ${complete ? `<button onclick="completeGoal(${index})">DONE</button>` : ''}
-  </div>
-`;
+      <div class="${complete ? 'goal-green' : 'goal-red'}" style="margin-bottom:10px;padding:10px;border-radius:8px">
+        <b>${goal.name}</b> - ₱${goal.price}
+        ${!complete ? `
+          <div class="progress">
+            <div class="progress-bar" style="width:${Math.max(5, percent)}%"></div>
+          </div>` : ''}
+        ${complete ? `<button onclick="completeGoal(${index})">DONE</button>` : ''}
+      </div>
+    `;
+  });
+}
 
-
-          ${complete ? `<button onclick="completeGoal(${index})">DONE</button>` : ''}
-        </div>
-      `;
-    });
-  }
 
   function completeGoal(index) {
     const goal = goals[index];
