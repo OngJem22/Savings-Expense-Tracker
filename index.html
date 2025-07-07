@@ -86,7 +86,7 @@
       width: 100%;
       margin-top: 10px;
       border-collapse: collapse;
-      background: #fff;
+      background: var(--section-bg);
       color: var(--text-color);
     }
     th, td {
@@ -113,25 +113,6 @@
       background-color: #8b5e3c;
       transition: width 0.4s ease;
     }
-    .nav {
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      display: flex;
-      background: var(--section-bg);
-      box-shadow: 0 -2px 5px rgba(0,0,0,0.2);
-      z-index: 1000;
-    }
-    .nav button {
-      flex: 1;
-      border: none;
-      background: none;
-      padding: 14px 0;
-      font-size: 16px;
-      font-weight: 600;
-      color: var(--text-color);
-    }
     .nav-toggle {
       position: fixed;
       top: 10px;
@@ -145,6 +126,23 @@
       font-size: 18px;
       text-align: center;
       line-height: 40px;
+      z-index: 9999;
+    }
+    .tabs {
+      display: flex;
+      justify-content: space-around;
+      margin-bottom: 20px;
+    }
+    .tabs button {
+      flex: 1;
+      padding: 10px;
+      background: var(--button-bg);
+      color: var(--button-text);
+      border: none;
+      font-weight: bold;
+    }
+    .hidden {
+      display: none;
     }
     @media (max-width: 600px) {
       input, select, button {
@@ -155,15 +153,18 @@
         font-size: 12px;
         padding: 8px;
       }
-      .nav button {
-        font-size: 14px;
-      }
     }
   </style>
 </head>
 <body>
   <button class="nav-toggle" onclick="document.body.classList.toggle('dark')">🌓</button>
-  <h1>Expense & Savings Tracker</h1>  <div class="section" id="allowance-section">
+  <h1>Expense & Savings Tracker</h1>
+  <div class="tabs">
+    <button onclick="showTab('allowance-section')">Allowance</button>
+    <button onclick="showTab('expenses-section')">Expenses</button>
+    <button onclick="showTab('savings-section')">Savings</button>
+    <button onclick="showTab('goals-section')">Goals</button>
+  </div>  <div class="section" id="allowance-section">
     <h2>Set Allowance</h2>
     <label for="allowance">Allowance Amount</label>
     <input type="number" id="allowance" />
@@ -174,7 +175,7 @@
       <option value="monthly">Monthly</option>
     </select>
     <button onclick="setAllowance()">Set Allowance</button>
-  </div>  <div class="section" id="expenses-section">
+  </div>  <div class="section hidden" id="expenses-section">
     <h2>Log Expense</h2>
     <label for="expenseName">Expense Name</label>
     <input type="text" id="expenseName">
@@ -183,14 +184,15 @@
     <button onclick="addExpense()">Add Expense</button>
     <button onclick="resetExpenses()">Reset Expenses</button>
     <table id="expenseTable"></table>
-  </div>  <div class="section" id="savings-section">
+  </div>  <div class="section hidden" id="savings-section">
     <h2>Savings</h2>
     <p id="savingsDisplay">₱0</p>
     <label for="manualSavings">Add to Savings</label>
     <input type="number" id="manualSavings">
     <button onclick="addToSavings()">Add Savings</button>
-    <button onclick="transferToSavings()">Transfer Remaining Allowance to Savings</button>
-  </div>  <div class="section" id="goals-section">
+    <button onclick="transferToSavings()">Transfer Remaining Allowance</button>
+    <button onclick="resetSavings()">Reset Savings</button>
+  </div>  <div class="section hidden" id="goals-section">
     <h2>Goals</h2>
     <label for="goalName">Goal Name</label>
     <input type="text" id="goalName">
@@ -203,6 +205,12 @@
     let savings = parseFloat(localStorage.getItem('savings')) || 0;
     let goals = JSON.parse(localStorage.getItem('goals')) || [];
     let expenses = JSON.parse(localStorage.getItem('expenses')) || [];
+    let allowance = parseFloat(localStorage.getItem('allowance')) || 0;
+
+    function showTab(tabId) {
+      document.querySelectorAll('.section').forEach(s => s.classList.add('hidden'));
+      document.getElementById(tabId).classList.remove('hidden');
+    }
 
     function updateSavingsDisplay() {
       document.getElementById('savingsDisplay').textContent = `₱${savings.toFixed(2)}`;
@@ -219,8 +227,33 @@
       }
     }
 
+    function resetSavings() {
+      if (confirm("Reset all savings?")) {
+        savings = 0;
+        localStorage.setItem("savings", savings);
+        updateSavingsDisplay();
+        renderGoals();
+      }
+    }
+
     function setAllowance() {
-      alert('Allowance set.');
+      allowance = parseFloat(document.getElementById("allowance").value) || 0;
+      localStorage.setItem("allowance", allowance);
+      alert("Allowance saved.");
+    }
+
+    function transferToSavings() {
+      const totalSpent = expenses.reduce((sum, e) => sum + e.amount, 0);
+      const remaining = allowance - totalSpent;
+      if (remaining > 0) {
+        savings += remaining;
+        localStorage.setItem("savings", savings);
+        updateSavingsDisplay();
+        renderGoals();
+        alert(`Transferred ₱${remaining.toFixed(2)} to savings.`);
+      } else {
+        alert("No remaining allowance to transfer.");
+      }
     }
 
     function addExpense() {
@@ -241,19 +274,11 @@
     }
 
     function resetExpenses() {
-      if (confirm("Are you sure you want to reset all expenses?")) {
+      if (confirm("Reset all expenses?")) {
         expenses = [];
         localStorage.setItem("expenses", JSON.stringify(expenses));
         renderExpenses();
       }
-    }
-
-    function transferToSavings() {
-      let remaining = 0;
-      savings += remaining;
-      localStorage.setItem('savings', savings);
-      updateSavingsDisplay();
-      renderGoals();
     }
 
     function addGoal() {
@@ -262,17 +287,6 @@
       if (name && !isNaN(price)) {
         goals.push({ name, price });
         localStorage.setItem('goals', JSON.stringify(goals));
-        renderGoals();
-      }
-    }
-
-    function editGoal(index) {
-      const newName = prompt("Edit goal name:", goals[index].name);
-      const newPrice = parseFloat(prompt("Edit goal price:", goals[index].price));
-      if (newName && !isNaN(newPrice)) {
-        goals[index].name = newName;
-        goals[index].price = newPrice;
-        localStorage.setItem("goals", JSON.stringify(goals));
         renderGoals();
       }
     }
@@ -288,8 +302,19 @@
       }
     }
 
+    function editGoal(index) {
+      const newName = prompt("Edit goal name:", goals[index].name);
+      const newPrice = parseFloat(prompt("Edit goal price:", goals[index].price));
+      if (newName && !isNaN(newPrice)) {
+        goals[index].name = newName;
+        goals[index].price = newPrice;
+        localStorage.setItem("goals", JSON.stringify(goals));
+        renderGoals();
+      }
+    }
+
     function resetGoals() {
-      if (confirm("Are you sure you want to reset all goals?")) {
+      if (confirm("Reset all goals?")) {
         goals = [];
         localStorage.setItem("goals", JSON.stringify(goals));
         renderGoals();
@@ -320,5 +345,6 @@
     renderGoals();
     renderExpenses();
     updateSavingsDisplay();
+    showTab('allowance-section');
   </script></body>
 </html>
