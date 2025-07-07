@@ -4,20 +4,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Expense & Savings Tracker</title>
   <link rel="manifest" href="manifest.json" />
-  <script>
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', function () {
-        navigator.serviceWorker.register('service-worker.js').then(
-          function (registration) {
-            console.log('ServiceWorker registration successful with scope: ', registration.scope);
-          },
-          function (err) {
-            console.log('ServiceWorker registration failed: ', err);
-          }
-        );
-      });
-    }
-  </script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     :root {
       --bg-color: #f4f1ee;
@@ -43,7 +30,6 @@
       background: var(--bg-color);
       color: var(--text-color);
       transition: background 0.3s ease, color 0.3s ease;
-      position: relative;
     }
     h1, h2 {
       text-align: center;
@@ -132,6 +118,7 @@
       display: flex;
       justify-content: space-around;
       margin-bottom: 20px;
+      flex-wrap: wrap;
     }
     .tabs button {
       flex: 1;
@@ -140,9 +127,19 @@
       color: var(--button-text);
       border: none;
       font-weight: bold;
+      margin: 4px;
     }
     .hidden {
       display: none;
+    }
+    .bold {
+      font-weight: bold;
+      font-size: 20px;
+    }
+    canvas {
+      background: #fff;
+      border-radius: 8px;
+      padding: 10px;
     }
     @media (max-width: 600px) {
       input, select, button {
@@ -164,187 +161,206 @@
     <button onclick="showTab('expenses-section')">Expenses</button>
     <button onclick="showTab('savings-section')">Savings</button>
     <button onclick="showTab('goals-section')">Goals</button>
-  </div>  <div class="section" id="allowance-section">
-    <h2>Set Allowance</h2>
-    <label for="allowance">Allowance Amount</label>
-    <input type="number" id="allowance" />
-    <label for="period">Period</label>
-    <select id="period">
-      <option value="daily">Daily</option>
-      <option value="weekly">Weekly</option>
-      <option value="monthly">Monthly</option>
-    </select>
-    <button onclick="setAllowance()">Set Allowance</button>
-  </div>  <div class="section hidden" id="expenses-section">
-    <h2>Log Expense</h2>
-    <label for="expenseName">Expense Name</label>
-    <input type="text" id="expenseName">
-    <label for="expenseAmount">Amount</label>
-    <input type="number" id="expenseAmount">
-    <button onclick="addExpense()">Add Expense</button>
-    <button onclick="resetExpenses()">Reset Expenses</button>
-    <table id="expenseTable"></table>
-  </div>  <div class="section hidden" id="savings-section">
-    <h2>Savings</h2>
-    <p id="savingsDisplay">₱0</p>
-    <label for="manualSavings">Add to Savings</label>
-    <input type="number" id="manualSavings">
-    <button onclick="addToSavings()">Add Savings</button>
-    <button onclick="transferToSavings()">Transfer Remaining Allowance</button>
-    <button onclick="resetSavings()">Reset Savings</button>
-  </div>  <div class="section hidden" id="goals-section">
-    <h2>Goals</h2>
-    <label for="goalName">Goal Name</label>
-    <input type="text" id="goalName">
-    <label for="goalPrice">Goal Price</label>
-    <input type="number" id="goalPrice">
-    <button onclick="addGoal()">Add Goal</button>
-    <button onclick="resetGoals()">Reset Goals</button>
-    <table id="goalTable"></table>
-  </div>  <script>
-    let savings = parseFloat(localStorage.getItem('savings')) || 0;
-    let goals = JSON.parse(localStorage.getItem('goals')) || [];
-    let expenses = JSON.parse(localStorage.getItem('expenses')) || [];
-    let allowance = parseFloat(localStorage.getItem('allowance')) || 0;
+    <button onclick="showTab('completed-goals-section')">Completed</button>
+    <button onclick="showTab('analysis-section')">Analysis</button>
+  </div>  <!-- SEGMENTS WILL CONTINUE HERE... --><div id="allowance-section" class="section">
+  <h2>Set Allowance</h2>
+  <label>Amount</label>
+  <input type="number" id="allowanceAmount" placeholder="Enter amount" />
+  <label>Type</label>
+  <select id="allowanceType">
+    <option value="daily">Daily</option>
+    <option value="weekly">Weekly</option>
+    <option value="monthly">Monthly</option>
+  </select>
+  <button onclick="setAllowance()">Set Allowance</button>
+</div><div id="expenses-section" class="section hidden">
+  <h2>Add Expense</h2>
+  <label>Amount</label>
+  <input type="number" id="expenseAmount" placeholder="Enter amount" />
+  <label>Category</label>
+  <select id="expenseCategory">
+    <option value="FOOD">FOOD</option>
+    <option value="DRINKS">DRINKS</option>
+    <option value="TRANSPO">TRANSPO</option>
+    <option value="OTHERS">OTHERS</option>
+  </select>
+  <button onclick="addExpense()">Add Expense</button>
+  <h3>Expenses List</h3>
+  <table id="expensesTable">
+    <thead><tr><th>Amount</th><th>Category</th><th>Date</th></tr></thead>
+    <tbody></tbody>
+  </table>
+  <button onclick="resetExpenses()">Reset Expenses</button>
+</div><div id="savings-section" class="section hidden">
+  <h2>Savings</h2>
+  <p class="bold">Total Savings: ₱<span id="totalSavings">0</span></p>
+  <label>Manual Add</label>
+  <input type="number" id="manualSaveAmount" placeholder="Enter amount" />
+  <button onclick="addToSavings()">Add to Savings</button>
+  <button onclick="transferRemainingAllowance()">Transfer Remaining Allowance</button>
+  <button onclick="resetSavings()">Reset Savings</button>
+</div><div id="goals-section" class="section hidden">
+  <h2>Goals</h2>
+  <label>Goal Name</label>
+  <input type="text" id="goalName" placeholder="e.g. New Phone" />
+  <label>Price</label>
+  <input type="number" id="goalPrice" placeholder="e.g. 5000" />
+  <button onclick="addGoal()">Add Goal</button>
+  <table id="goalsTable">
+    <thead><tr><th>Goal</th><th>Price</th><th>Status</th><th>Action</th></tr></thead>
+    <tbody></tbody>
+  </table>
+</div><div id="completed-goals-section" class="section hidden">
+  <h2>Completed Goals</h2>
+  <table id="completedGoalsTable">
+    <thead><tr><th>Goal</th><th>Price</th><th>Date</th></tr></thead>
+    <tbody></tbody>
+  </table>
+</div><div id="analysis-section" class="section hidden">
+  <h2>Expense Analysis</h2>
+  <canvas id="expenseChart" height="200"></canvas>
+</div><script>
+let allowance = JSON.parse(localStorage.getItem('allowance')) || { amount: 0, type: 'daily', date: new Date().toDateString() };
+let expenses = JSON.parse(localStorage.getItem('expenses')) || [];
+let savings = parseFloat(localStorage.getItem('savings') || '0');
+let goals = JSON.parse(localStorage.getItem('goals') || '[]');
+let completedGoals = JSON.parse(localStorage.getItem('completedGoals') || '[]');
 
-    function showTab(tabId) {
-      document.querySelectorAll('.section').forEach(s => s.classList.add('hidden'));
-      document.getElementById(tabId).classList.remove('hidden');
+function showTab(id) {
+  document.querySelectorAll('.section').forEach(s => s.classList.add('hidden'));
+  document.getElementById(id).classList.remove('hidden');
+  if (id === 'analysis-section') updateChart();
+}
+
+function setAllowance() {
+  const amount = parseFloat(document.getElementById('allowanceAmount').value);
+  const type = document.getElementById('allowanceType').value;
+  allowance = { amount, type, date: new Date().toDateString() };
+  localStorage.setItem('allowance', JSON.stringify(allowance));
+  resetExpenses(); // auto reset on new allowance
+}
+
+function addExpense() {
+  const amount = parseFloat(document.getElementById('expenseAmount').value);
+  const category = document.getElementById('expenseCategory').value;
+  const date = new Date().toLocaleDateString();
+  if (!amount || amount <= 0) return;
+  expenses.push({ amount, category, date });
+  localStorage.setItem('expenses', JSON.stringify(expenses));
+  renderExpenses();
+}
+
+function renderExpenses() {
+  const tbody = document.querySelector('#expensesTable tbody');
+  tbody.innerHTML = '';
+  expenses.forEach(e => {
+    const row = `<tr><td>₱${e.amount}</td><td>${e.category}</td><td>${e.date}</td></tr>`;
+    tbody.innerHTML += row;
+  });
+}
+
+function resetExpenses() {
+  expenses = [];
+  localStorage.setItem('expenses', '[]');
+  renderExpenses();
+}
+
+function addToSavings() {
+  const amt = parseFloat(document.getElementById('manualSaveAmount').value);
+  if (!amt || amt <= 0) return;
+  savings += amt;
+  localStorage.setItem('savings', savings);
+  updateSavings();
+}
+
+function transferRemainingAllowance() {
+  const spent = expenses.reduce((sum, e) => sum + e.amount, 0);
+  const remaining = allowance.amount - spent;
+  if (remaining > 0) {
+    savings += remaining;
+    localStorage.setItem('savings', savings);
+    updateSavings();
+  }
+}
+
+function resetSavings() {
+  savings = 0;
+  localStorage.setItem('savings', '0');
+  updateSavings();
+}
+
+function updateSavings() {
+  document.getElementById('totalSavings').innerText = savings.toFixed(2);
+  renderGoals();
+}
+
+function addGoal() {
+  const name = document.getElementById('goalName').value;
+  const price = parseFloat(document.getElementById('goalPrice').value);
+  if (!name || !price || price <= 0) return;
+  goals.push({ name, price });
+  localStorage.setItem('goals', JSON.stringify(goals));
+  renderGoals();
+}
+
+function renderGoals() {
+  const tbody = document.querySelector('#goalsTable tbody');
+  tbody.innerHTML = '';
+  goals.forEach((g, i) => {
+    const status = savings >= g.price ? '✅' : '❌';
+    const row = `<tr class="${savings >= g.price ? 'goal-green' : 'goal-red'}">
+      <td>${g.name}</td>
+      <td>₱${g.price}</td>
+      <td>${status}</td>
+      <td>${savings >= g.price ? `<button onclick="completeGoal(${i})">DONE</button>` : ''}</td>
+    </tr>`;
+    tbody.innerHTML += row;
+  });
+}
+
+function completeGoal(index) {
+  const goal = goals[index];
+  savings -= goal.price;
+  completedGoals.push({ ...goal, date: new Date().toLocaleDateString() });
+  goals.splice(index, 1);
+  localStorage.setItem('savings', savings);
+  localStorage.setItem('goals', JSON.stringify(goals));
+  localStorage.setItem('completedGoals', JSON.stringify(completedGoals));
+  updateSavings();
+  renderCompletedGoals();
+}
+
+function renderCompletedGoals() {
+  const tbody = document.querySelector('#completedGoalsTable tbody');
+  tbody.innerHTML = '';
+  completedGoals.forEach(g => {
+    tbody.innerHTML += `<tr><td>${g.name}</td><td>₱${g.price}</td><td>${g.date}</td></tr>`;
+  });
+}
+
+function updateChart() {
+  const ctx = document.getElementById('expenseChart').getContext('2d');
+  const categories = {};
+  expenses.forEach(e => categories[e.category] = (categories[e.category] || 0) + e.amount);
+  const chart = new Chart(ctx, {
+    type: 'pie',
+    data: {
+      labels: Object.keys(categories),
+      datasets: [{
+        data: Object.values(categories),
+        backgroundColor: ['#c19a6b', '#d6a77a', '#a9745b', '#8b5e3c']
+      }]
+    },
+    options: {
+      plugins: { legend: { labels: { color: getComputedStyle(document.body).getPropertyValue('--text-color') } } }
     }
+  });
+}
 
-    function updateSavingsDisplay() {
-      document.getElementById('savingsDisplay').textContent = `₱${savings.toFixed(2)}`;
-    }
-
-    function addToSavings() {
-      const amount = parseFloat(document.getElementById('manualSavings').value);
-      if (!isNaN(amount) && amount > 0) {
-        savings += amount;
-        localStorage.setItem("savings", savings);
-        document.getElementById('manualSavings').value = '';
-        updateSavingsDisplay();
-        renderGoals();
-      }
-    }
-
-    function resetSavings() {
-      if (confirm("Reset all savings?")) {
-        savings = 0;
-        localStorage.setItem("savings", savings);
-        updateSavingsDisplay();
-        renderGoals();
-      }
-    }
-
-    function setAllowance() {
-      allowance = parseFloat(document.getElementById("allowance").value) || 0;
-      localStorage.setItem("allowance", allowance);
-      alert("Allowance saved.");
-    }
-
-    function transferToSavings() {
-      const totalSpent = expenses.reduce((sum, e) => sum + e.amount, 0);
-      const remaining = allowance - totalSpent;
-      if (remaining > 0) {
-        savings += remaining;
-        localStorage.setItem("savings", savings);
-        updateSavingsDisplay();
-        renderGoals();
-        alert(`Transferred ₱${remaining.toFixed(2)} to savings.`);
-      } else {
-        alert("No remaining allowance to transfer.");
-      }
-    }
-
-    function addExpense() {
-      const name = document.getElementById('expenseName').value;
-      const amount = parseFloat(document.getElementById('expenseAmount').value);
-      if (name && !isNaN(amount)) {
-        expenses.push({ name, amount });
-        localStorage.setItem('expenses', JSON.stringify(expenses));
-        renderExpenses();
-      }
-    }
-
-    function renderExpenses() {
-      const table = document.getElementById('expenseTable');
-      table.innerHTML = '<tr><th>Name</th><th>Amount</th></tr>' + expenses.map(e => `
-        <tr><td>${e.name}</td><td>₱${e.amount.toFixed(2)}</td></tr>`
-      ).join('');
-    }
-
-    function resetExpenses() {
-      if (confirm("Reset all expenses?")) {
-        expenses = [];
-        localStorage.setItem("expenses", JSON.stringify(expenses));
-        renderExpenses();
-      }
-    }
-
-    function addGoal() {
-      const name = document.getElementById('goalName').value;
-      const price = parseFloat(document.getElementById('goalPrice').value);
-      if (name && !isNaN(price)) {
-        goals.push({ name, price });
-        localStorage.setItem('goals', JSON.stringify(goals));
-        renderGoals();
-      }
-    }
-
-    function completeGoal(index) {
-      if (savings >= goals[index].price) {
-        savings -= goals[index].price;
-        localStorage.setItem("savings", savings);
-        goals.splice(index, 1);
-        localStorage.setItem("goals", JSON.stringify(goals));
-        updateSavingsDisplay();
-        renderGoals();
-      }
-    }
-
-    function editGoal(index) {
-      const newName = prompt("Edit goal name:", goals[index].name);
-      const newPrice = parseFloat(prompt("Edit goal price:", goals[index].price));
-      if (newName && !isNaN(newPrice)) {
-        goals[index].name = newName;
-        goals[index].price = newPrice;
-        localStorage.setItem("goals", JSON.stringify(goals));
-        renderGoals();
-      }
-    }
-
-    function resetGoals() {
-      if (confirm("Reset all goals?")) {
-        goals = [];
-        localStorage.setItem("goals", JSON.stringify(goals));
-        renderGoals();
-      }
-    }
-
-    function renderGoals() {
-      const table = document.getElementById('goalTable');
-      table.innerHTML = '<tr><th>Goal</th><th>Price</th><th>Progress</th><th>Actions</th></tr>' + goals.map((g, i) => {
-        const className = savings >= g.price ? 'goal-green' : 'goal-red';
-        const progress = Math.min((savings / g.price) * 100, 100);
-        const doneBtn = savings >= g.price ? `<button onclick="completeGoal(${i})">DONE</button>` : '';
-        const editBtn = `<button onclick="editGoal(${i})">✏️</button>`;
-        return `
-          <tr class="${className}">
-            <td>${g.name}</td>
-            <td>₱${g.price}</td>
-            <td>
-              <div class="progress">
-                <div class="progress-bar" style="width:${progress}%"></div>
-              </div>
-            </td>
-            <td>${editBtn} ${doneBtn}</td>
-          </tr>`;
-      }).join('');
-    }
-
-    renderGoals();
-    renderExpenses();
-    updateSavingsDisplay();
-    showTab('allowance-section');
-  </script></body>
-</html>
+// Initial load
+renderExpenses();
+updateSavings();
+renderGoals();
+renderCompletedGoals();
+</script>
