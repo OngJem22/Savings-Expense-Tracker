@@ -134,10 +134,9 @@
     </select>
     <button onclick="setAllowance()">Set Allowance</button>
   </div>
-
   <div id="expenses" class="section hidden">
     <h2>Add Expense</h2>
-    <input type="number" id="expenseAmount" placeholder="Amount" />
+    <input type="number" id="expenseAmount" placeholder="Amount">
     <select id="expenseCategory">
       <option value="FOOD">FOOD</option>
       <option value="DRINKS">DRINKS</option>
@@ -146,175 +145,220 @@
     </select>
     <button onclick="addExpense()">Add Expense</button>
     <button onclick="resetExpenses()">Reset Expenses</button>
+    <div id="expenseList"></div>
   </div>
 
   <div id="savings" class="section hidden">
-    <h2>Savings</h2>
-    <p><strong>Total Savings: ₱<span id="totalSavings">0</span></strong></p>
-    <input type="number" id="manualSaveAmount" placeholder="Manual Add">
-    <button onclick="addToSavings()">Add to Savings</button>
-    <button onclick="transferRemainingAllowance()">Transfer Remaining Allowance</button>
+    <h2>Total Savings: <span id="totalSavings" style="font-weight:bold;"></span></h2>
+    <input type="number" id="manualSavings" placeholder="Add to Savings">
+    <button onclick="addManualSavings()">Add to Savings</button>
+    <button onclick="transferToSavings()">Transfer Remaining Allowance</button>
     <button onclick="resetSavings()">Reset Savings</button>
   </div>
 
   <div id="goals" class="section hidden">
     <h2>Goals</h2>
-    <input id="goalName" placeholder="Goal Name" />
-    <input type="number" id="goalPrice" placeholder="Goal Price" />
+    <input type="text" id="goalName" placeholder="Goal name">
+    <input type="number" id="goalPrice" placeholder="Goal amount">
     <button onclick="addGoal()">Add Goal</button>
-    <table id="goalsTable"></table>
+    <div id="goalList"></div>
   </div>
 
   <div id="completed" class="section hidden">
     <h2>Completed Goals</h2>
-    <table id="completedGoalsTable"></table>
-    <button onclick="resetCompletedGoals()">Reset Completed</button>
+    <button onclick="resetCompleted()">Reset Completed Goals</button>
+    <div id="completedList"></div>
   </div>
 
   <div id="log" class="section hidden">
     <h2>Expense Log</h2>
-    <table id="expenseLogBody"></table>
+    <div id="expenseLog"></div>
   </div>
+<script>
+  let allowance = JSON.parse(localStorage.getItem('allowance')) || { amount: 0, type: 'daily' };
+  let expenses = JSON.parse(localStorage.getItem('expenses')) || [];
+  let savings = parseFloat(localStorage.getItem('savings') || '0');
+  let goals = JSON.parse(localStorage.getItem('goals') || '[]');
+  let completedGoals = JSON.parse(localStorage.getItem('completedGoals') || '[]');
 
-  <script>
-    let allowance = JSON.parse(localStorage.getItem('allowance')) || { amount: 0, type: 'daily' };
-    let expenses = JSON.parse(localStorage.getItem('expenses')) || [];
-    let savings = parseFloat(localStorage.getItem('savings') || '0');
-    let goals = JSON.parse(localStorage.getItem('goals') || '[]');
-    let completedGoals = JSON.parse(localStorage.getItem('completedGoals') || '[]');
+  function showTab(id) {
+    document.querySelectorAll('.section').forEach(el => el.classList.add('hidden'));
+    document.getElementById(id).classList.remove('hidden');
+    if (id === 'expenses') renderExpenses();
+    if (id === 'savings') updateSavings();
+    if (id === 'goals') renderGoals();
+    if (id === 'completed') renderCompletedGoals();
+    if (id === 'log') renderExpenseLog();
+  }
 
-    function showTab(id) {
-      document.querySelectorAll('.section').forEach(el => el.classList.add('hidden'));
-      document.getElementById(id).classList.remove('hidden');
-      if (id === 'log') renderExpenseLog();
+  function showToast(msg) {
+    const toast = document.getElementById('toast');
+    toast.textContent = msg;
+    toast.style.display = 'block';
+    setTimeout(() => toast.style.display = 'none', 2000);
+  }
+
+  function setAllowance() {
+    allowance.amount = parseFloat(document.getElementById('allowanceAmount').value);
+    allowance.type = document.getElementById('allowanceType').value;
+    localStorage.setItem('allowance', JSON.stringify(allowance));
+    showToast('✅ Allowance set');
+  }
+
+  function addExpense() {
+    const amount = parseFloat(document.getElementById('expenseAmount').value);
+    const category = document.getElementById('expenseCategory').value;
+    if (isNaN(amount) || amount <= 0) return showToast('❌ Invalid amount');
+    const todaySpent = expenses.reduce((sum, e) => e.date === today() ? sum + e.amount : sum, 0);
+    if ((todaySpent + amount) > allowance.amount) {
+      showToast('❌ Not enough allowance');
+      return;
     }
+    expenses.push({ amount, category, date: today() });
+    localStorage.setItem('expenses', JSON.stringify(expenses));
+    showToast('✅ Expense added');
+    renderExpenses();
+  }
 
-    function showToast(msg) {
-      const toast = document.getElementById('toast');
-      toast.textContent = msg;
-      toast.style.display = 'block';
-      setTimeout(() => toast.style.display = 'none', 2000);
-    }
+  function renderExpenses() {
+    const list = document.getElementById('expenseList');
+    const todayExpenses = expenses.filter(e => e.date === today());
+    if (!todayExpenses.length) return list.innerHTML = '<p>No expenses today</p>';
+    let html = '<table><tr><th>Amount</th><th>Category</th></tr>';
+    todayExpenses.forEach(e => {
+      html += `<tr><td>${e.amount}</td><td>${e.category}</td></tr>`;
+    });
+    html += '</table>';
+    list.innerHTML = html;
+  }
 
-    function setAllowance() {
-      allowance.amount = parseFloat(document.getElementById('allowanceAmount').value);
-      allowance.type = document.getElementById('allowanceType').value;
-      localStorage.setItem('allowance', JSON.stringify(allowance));
-      resetExpenses();
-      showToast("✅ Allowance Set & Expenses Reset");
-    }
+  function resetExpenses() {
+    expenses = expenses.filter(e => e.date !== today());
+    localStorage.setItem('expenses', JSON.stringify(expenses));
+    showToast('✅ Expenses reset');
+    renderExpenses();
+  }
 
-    function addExpense() {
-      const amount = parseFloat(document.getElementById('expenseAmount').value);
-      const category = document.getElementById('expenseCategory').value;
-      if (!amount || amount <= 0) return showToast("⚠️ Enter valid amount");
-      expenses.push({ amount, category, date: new Date().toLocaleDateString() });
-      localStorage.setItem('expenses', JSON.stringify(expenses));
-      showToast("✅ Expense Added");
-    }
-
-    function resetExpenses() {
-      expenses = [];
-      localStorage.setItem('expenses', JSON.stringify([]));
-      showToast("♻️ Expenses Reset");
-    }
-
-    function addToSavings() {
-      const amt = parseFloat(document.getElementById('manualSaveAmount').value);
-      if (amt > 0) {
-        savings += amt;
-        localStorage.setItem('savings', savings);
-        updateSavings();
-        showToast("✅ Added to Savings");
-      }
-    }
-
-    function transferRemainingAllowance() {
-      const spent = expenses.reduce((sum, e) => sum + e.amount, 0);
-      const remaining = allowance.amount - spent;
-      if (remaining > 0) {
-        savings += remaining;
-        localStorage.setItem('savings', savings);
-        updateSavings();
-        showToast("✅ Remaining Transferred to Savings");
-      } else {
-        showToast("⚠️ No remaining allowance");
-      }
-    }
-
-    function resetSavings() {
-      savings = 0;
-      localStorage.setItem('savings', '0');
-      updateSavings();
-      showToast("♻️ Savings Reset");
-    }
-
-    function updateSavings() {
-      document.getElementById('totalSavings').innerText = savings.toFixed(2);
-      renderGoals();
-    }
-
-    function addGoal() {
-      const name = document.getElementById('goalName').value;
-      const price = parseFloat(document.getElementById('goalPrice').value);
-      if (!name || !price) return;
-      goals.push({ name, price });
-      localStorage.setItem('goals', JSON.stringify(goals));
-      renderGoals();
-      showToast("✅ Goal Added");
-    }
-
-    function renderGoals() {
-      const table = document.getElementById('goalsTable');
-      table.innerHTML = '';
-      goals.forEach((g, i) => {
-        const within = savings >= g.price;
-        const progress = Math.min((savings / g.price) * 100, 100);
-        table.innerHTML += `
-          <tr class="${within ? 'goal-green' : 'goal-red'}">
-            <td>${g.name} - ₱${g.price}</td>
-            <td><div class="progress"><div class="progress-bar" style="width:${progress}%"></div></div></td>
-            <td>${within ? `<button onclick="completeGoal(${i})">DONE</button>` : ''}</td>
-          </tr>`;
-      });
-    }
-
-    function completeGoal(i) {
-      const g = goals[i];
-      if (savings >= g.price) {
-        savings -= g.price;
-        completedGoals.push({ ...g, date: new Date().toLocaleDateString() });
-        goals.splice(i, 1);
-        localStorage.setItem('goals', JSON.stringify(goals));
-        localStorage.setItem('completedGoals', JSON.stringify(completedGoals));
-        localStorage.setItem('savings', savings);
-        updateSavings();
-        renderCompletedGoals();
-        showToast("🎉 Goal Completed!");
-      }
-    }
-
-    function renderCompletedGoals() {
-      const table = document.getElementById('completedGoalsTable');
-      table.innerHTML = completedGoals.map(g => `<tr><td>${g.name}</td><td>₱${g.price}</td><td>${g.date}</td></tr>`).join('');
-    }
-
-    function resetCompletedGoals() {
-      completedGoals = [];
-      localStorage.setItem('completedGoals', JSON.stringify([]));
-      renderCompletedGoals();
-      showToast("♻️ Completed Goals Reset");
-    }
-
-    function renderExpenseLog() {
-      const table = document.getElementById('expenseLogBody');
-      table.innerHTML = expenses.map(e => `<tr><td>₱${e.amount}</td><td>${e.category}</td><td>${e.date}</td></tr>`).join('');
-    }
-
-    // INIT
+  function addManualSavings() {
+    const amt = parseFloat(document.getElementById('manualSavings').value);
+    if (!amt || amt <= 0) return showToast('❌ Invalid amount');
+    savings += amt;
+    localStorage.setItem('savings', savings);
+    showToast('✅ Saved');
     updateSavings();
+  }
+
+  function transferToSavings() {
+    const todaySpent = expenses.reduce((sum, e) => e.date === today() ? sum + e.amount : sum, 0);
+    const remaining = allowance.amount - todaySpent;
+    if (remaining <= 0) return showToast('❌ No remaining allowance');
+    savings += remaining;
+    localStorage.setItem('savings', savings);
+    showToast('✅ Remaining allowance saved');
+    resetExpenses();
+    updateSavings();
+  }
+
+  function updateSavings() {
+    document.getElementById('totalSavings').textContent = savings.toFixed(2);
+  }
+
+  function resetSavings() {
+    savings = 0;
+    localStorage.setItem('savings', savings);
+    showToast('✅ Savings reset');
+    updateSavings();
+  }
+
+  function addGoal() {
+    const name = document.getElementById('goalName').value;
+    const price = parseFloat(document.getElementById('goalPrice').value);
+    if (!name || isNaN(price)) return showToast('❌ Invalid goal');
+    goals.push({ name, price });
+    localStorage.setItem('goals', JSON.stringify(goals));
+    showToast('✅ Goal added');
     renderGoals();
+  }
+
+  function renderGoals() {
+    const container = document.getElementById('goalList');
+    container.innerHTML = '';
+    goals.forEach((goal, index) => {
+      const percent = Math.min(100, (savings / goal.price) * 100);
+      const complete = savings >= goal.price;
+      container.innerHTML += `
+        <div class="${complete ? 'goal-green' : 'goal-red'}" style="margin-bottom:10px;padding:10px;border-radius:8px">
+          <b>${goal.name}</b> - ₱${goal.price}
+          <div class="progress"><div class="progress-bar" style="width:${percent}%"></div></div>
+          ${complete ? `<button onclick="completeGoal(${index})">DONE</button>` : ''}
+        </div>
+      `;
+    });
+  }
+
+  function completeGoal(index) {
+    const goal = goals[index];
+    if (savings >= goal.price) {
+      savings -= goal.price;
+      completedGoals.push(goal);
+      goals.splice(index, 1);
+      localStorage.setItem('savings', savings);
+      localStorage.setItem('completedGoals', JSON.stringify(completedGoals));
+      localStorage.setItem('goals', JSON.stringify(goals));
+      showToast('✅ Goal completed');
+      renderGoals();
+      updateSavings();
+      renderCompletedGoals();
+    }
+  }
+
+  function renderCompletedGoals() {
+    const container = document.getElementById('completedList');
+    if (!completedGoals.length) {
+      container.innerHTML = '<p>No completed goals</p>';
+      return;
+    }
+    container.innerHTML = '<ul>' + completedGoals.map(g => `<li>${g.name} - ₱${g.price}</li>`).join('') + '</ul>';
+  }
+
+  function resetCompleted() {
+    completedGoals = [];
+    localStorage.setItem('completedGoals', JSON.stringify(completedGoals));
+    showToast('✅ Completed goals reset');
     renderCompletedGoals();
-  </script>
+  }
+
+  function renderExpenseLog() {
+    const logDiv = document.getElementById('expenseLog');
+    if (!expenses.length) {
+      logDiv.innerHTML = '<p>No expenses yet.</p>';
+      return;
+    }
+    let grouped = {};
+    expenses.forEach(e => {
+      if (!grouped[e.date]) grouped[e.date] = [];
+      grouped[e.date].push(e);
+    });
+    let html = '';
+    for (let date in grouped) {
+      html += `<h3>${date}</h3><table><tr><th>Amount</th><th>Category</th></tr>`;
+      grouped[date].forEach(e => {
+        html += `<tr><td>${e.amount}</td><td>${e.category}</td></tr>`;
+      });
+      html += '</table>';
+    }
+    logDiv.innerHTML = html;
+  }
+
+  function today() {
+    return new Date().toISOString().split('T')[0];
+  }
+
+  // Load initial
+  updateSavings();
+  renderGoals();
+  renderCompletedGoals();
+  renderExpenses();
+</script>
 </body>
 </html>
